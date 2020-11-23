@@ -1,13 +1,16 @@
+<%@ page import="com.google.appengine.api.blobstore.BlobstoreServiceFactory" %>
+<%@ page import="com.google.appengine.api.blobstore.BlobstoreService" %>
+
+<%
+    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+%>
+
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Facebook Login JavaScript Example</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <div id="imagelist"/>
-    <script>
-        function callServlet() {
-            location.href = "test";}
-    </script>
     <style>
         #post{
             display:none;
@@ -18,6 +21,28 @@
 </head>
 
 <body>
+<form action="/cloudvision" id="imageform" method="post" enctype="multipart/form-data">
+</form>
+
+<div id="imageDiv" class="thumbnail">
+    <!--<script>
+        $('.thumbnail').click(function() {
+            var $thumb = $(this).find
+            console.log("Image source is:" + src);
+            var hiddenInput = '<input type="hidden" name="hiddenField" value="' + src +'"/>';
+            document.getElementById('imageform').innerHTML = hiddenInput;
+            document.getElementById('imageform').submit();
+        });
+    </script>-->
+    <script>
+        function imgOnclick(src) {
+            var hiddenInput = '<input type="hidden" name="hiddenField" value="' + src +'"/>';
+            document.getElementById('imageform').innerHTML = hiddenInput;
+            document.getElementById('imageform').submit();
+        }
+    </script>
+</div>
+
 <div id="fb-root"></div>
 <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v8.0&appId=3404674302977168&autoLogAppEvents=1" nonce="iGO5Dyev"></script>
 <script>
@@ -111,9 +136,9 @@
                 console.log(response);
                 var imgHtml = "";
                 response.data.forEach(album => {album.photos.data.forEach(photo => {
-                    imgHtml = imgHtml + ' <img id="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick="callServlet()"/>';
+                    imgHtml = imgHtml + ' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
                 })})
-                document.getElementById('imagelist').innerHTML = imgHtml;
+                document.getElementById('imageDiv').innerHTML = imgHtml;
             }
         );
 

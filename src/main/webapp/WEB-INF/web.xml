@@ -4,4 +4,12 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+    <servlet-name>cloudvision</servlet-name>
+    <servlet-class>cloudvision</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>cloudvision</servlet-name>
+    <url-pattern>/cloudvision</url-pattern>
+  </servlet-mapping>
 </web-app>
