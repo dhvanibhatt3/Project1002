@@ -13,15 +13,17 @@
 </head>
 
 <body>
+<h1 id="welcome">
 
-<form action="/cloudvision" id="imageform" method="post" enctype="multipart/form-data">
+</h1>
+<form action="/CloudVision" id="imageform" method="post" enctype="multipart/form-data">
 </form>
 
 <div id="imageDiv" class="thumbnail">
     <script>
         function imgOnclick(src) {
             var hiddenInput = '<input type="hidden" name="hiddenField" value="' + src +'"/>';
-            document.getElementById('imageform').innerHTML = hiddenInput;
+            document.getElementById('imageform').innerHTML += hiddenInput;
             document.getElementById('imageform').submit();
         }
     </script>
@@ -91,10 +93,10 @@
     {
         console.log('Welcome!  Fetching your information.... ');
         FB.api('/me', function (response) {
-            console.log('Successful login for: ' + response.name);
-            document.getElementById('test').innerHTML =
-                'Thanks for logging in, ' + response.name + '!';
+            document.getElementById('welcome').innerHTML = 'Thanks for logging in, ' + response.name + '! ';
+            document.getElementById('imageform').innerHTML = '<input type="hidden" name="username" value="' + response.name +'"/>';
         });
+
     }
 
     /*function pullimages() {
@@ -120,9 +122,9 @@
                 console.log(response);
                 var imgHtml = "";
                 response.data.forEach(album => {album.photos.data.forEach(photo => {
-                    imgHtml = imgHtml + ' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
+                    imgHtml = imgHtml  +' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
                 })})
-                document.getElementById('imageDiv').innerHTML = imgHtml;
+                document.getElementById('imageDiv').innerHTML =  imgHtml;
             }
         );
 

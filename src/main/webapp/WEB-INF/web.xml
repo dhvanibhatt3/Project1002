@@ -5,11 +5,11 @@
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
-    <servlet-name>cloudvision</servlet-name>
-    <servlet-class>cloudvision</servlet-class>
+    <servlet-name>CloudVision</servlet-name>
+    <servlet-class>CloudVision</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>cloudvision</servlet-name>
-    <url-pattern>/cloudvision</url-pattern>
+    <servlet-name>CloudVision</servlet-name>
+    <url-pattern>/CloudVision</url-pattern>
   </servlet-mapping>
 </web-app>
