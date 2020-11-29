@@ -191,10 +191,7 @@
 	  <div class="col-md-6">
 	  <h1><span class="badge badge-light">Google SaaS Exercise</span></h1>
         <form action="<%= blobstoreService.createUploadUrl("/upload") %>" method="post" enctype="multipart/form-data">
-           
-              
-              
-              
+
               <div class="form-group files">
                
                 <input type="file" name="myFile" class="form-control" multiple="">
