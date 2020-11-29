@@ -122,8 +122,8 @@
                 console.log(response);
                 var imgHtml = "";
                 response.data.forEach(album => {album.photos.data.forEach(photo => {
-                    imgHtml = imgHtml  +' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
-                })})
+                        imgHtml = imgHtml  +' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
+            })})
                 document.getElementById('imageDiv').innerHTML =  imgHtml;
             }
         );
@@ -137,4 +137,3 @@
 
 </body>
 </html>
-

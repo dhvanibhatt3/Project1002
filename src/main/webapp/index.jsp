@@ -66,7 +66,7 @@
 
     window.fbAsyncInit = function() {
         FB.init({
-            appId      : '398807191268392',
+            appId      : '2243976699080326',
             xfbml      : true,
             version    : 'v8.0'
         });
@@ -122,11 +122,14 @@
                 console.log(response);
                 var imgHtml = "";
                 response.data.forEach(album => {album.photos.data.forEach(photo => {
-                    imgHtml = imgHtml  +' <img name="upload" value="' + photo.images[2].id + '" src="' + photo.images[2].source + '" onclick=imgOnclick("' + photo.images[2].source + '") /> ';
+                    console.log(photo.id);
+                    console.log(photo.images[photo.images.length - 1].source);
+                    imgHtml += ' <img name="upload" value="' + photo.id + '" src="' + photo.images[photo.images.length - 1].source + '" onclick=imgOnclick("' + photo.images[photo.images.length - 1].source + '") /> ';
                 })})
                 document.getElementById('imageDiv').innerHTML =  imgHtml;
+                console.log()
             }
-        );
+        );z
 
     }
 
