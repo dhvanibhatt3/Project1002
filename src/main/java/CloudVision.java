@@ -8,13 +8,9 @@ import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.Feature.Type;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Iterator;
@@ -26,13 +22,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.io.FileUtils;
+//import org.apache.commons.io.FileUtils;
 
 @MultipartConfig
 @WebServlet(
-        name = "CloudVision"
+        name = "CloudVision",
+        urlPatterns = {"/CloudVision"}
 )
-public class CloudVision extends HttpServlet {
+public class CloudVision extends HttpServlet{
     public CloudVision() {
     }
 
@@ -41,12 +38,7 @@ public class CloudVision extends HttpServlet {
         String url = request.getParameter("hiddenField");
         String user = request.getParameter("username");
         System.out.println(user);
-        String filePath = "temp";
-        URL httpUrl = new URL(url);
-        File imageFile = new File(filePath);
-        new FileOutputStream(imageFile);
-        FileUtils.copyURLToFile(httpUrl, imageFile);
-        List<AnnotateImageResponse> labelResponses = this.generateLabel(filePath);
+        List<AnnotateImageResponse> labelResponses = this.generateLabel(url);
         StringBuffer sb = new StringBuffer("");
         PhotoDetails photo = new PhotoDetails();
         photo.setUrl(url);
@@ -89,20 +81,32 @@ public class CloudVision extends HttpServlet {
             photo.setInformation(picInfos);
             response.setContentType("text/html");
             PrintWriter out = response.getWriter();
-            byte[] base64 = Files.readAllBytes(imageFile.toPath());
+            byte[] base64 = getImageUrlInBytes(url);
             String imgEncode = Base64.getEncoder().encodeToString(base64);
             out.println("<h1 style='text-align:center;'> HashTag generator for " + user + "'s photo </h1>");
             out.println("<p style='text-align:center;'><img src='data:image/jpg;base64, " + imgEncode + "' alt='pic img' style='width:304px;height:228px;'></p>");
             out.println("<p> " + photo.toString() + "</p>");
         }
+    }
 
-        imageFile.deleteOnExit();
+    private byte[] getImageUrlInBytes(String urlToBytes) throws IOException {
+        URL url = new URL(urlToBytes);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        try (InputStream inputStream = url.openStream()) {
+            int n = 0;
+            byte [] buffer = new byte[ 1024 ];
+            while (-1 != (n = inputStream.read(buffer))) {
+                output.write(buffer, 0, n);
+            }
+        }
+        return output.toByteArray();
     }
 
     private List<AnnotateImageResponse> generateLabel(String filePath) throws IOException {
         List<AnnotateImageRequest> requests = new ArrayList();
         System.out.println(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
-        ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
+        ByteString imgBytes = ByteString.readFrom(new URL(filePath).openStream());
         Image img = Image.newBuilder().setContent(imgBytes).build();
         Feature feat = Feature.newBuilder().setType(Type.LABEL_DETECTION).build();
         AnnotateImageRequest request = AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
