@@ -11,7 +11,7 @@
 	BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
 %>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
 <html>
 <head>
@@ -28,7 +28,7 @@
 
 	<table>
 		<tr>
-			<td align="center"><h1><span class="badge badge-light">HashTag Generator</span></h1></td>
+			<td align="center"><h1><span class="badge badge-light">Label Detection</span></h1></td>
 		</tr>
 		<tr>
 			<td><br></td>
@@ -49,27 +49,35 @@
 			<td><br></td>
 		</tr>
 		<%
-			List<String> imageLabels = (List<String>) request.getAttribute("imageLabels");
-
+			List<EntityAnnotation> imageLabels = (List<EntityAnnotation>) request.getAttribute("imageLabels");
 		%>
 		<tr>
-			<td><h3><span class="badge badge-primary">Suggested HashTag</span></h3></td>
+			<td><h3><span class="badge badge-primary">Labels from Google Vision</span></h3></td>
 			<td></td>
 			<td>
-				<table>
+				<table class="table table-dark">
+				<thead>
+    
 					<tr>
-					<c:forEach items="${imageLabels}" var="label">
+						<th scope="col">Label</th>
+						<th scope="col">Score</th>
 
-						<td><h3>#${label}</h3></td>
-
-					</c:forEach>
 					</tr>
+</thead>
+ <tbody>
+					<c:forEach items="${imageLabels}" var="label">
+						<tr>
+							<td>${label.getDescription()}</td>
+							<td>${label.getScore()}</td>
+						</tr>
+					</c:forEach>
+</tbody>
 				</table>
 
 			</td>
 		</tr>
 		<tr>
-			<td><a href="/">Reset Image</a></td>
+			<td><a href="/">Reset Image</</a></td>
 		</tr>
 	</table>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

@@ -75,9 +75,11 @@
     </form>
     <div id="imageDiv" class="thumbnail">
         <script>
-            function imgOnclick(src) {
+            function imgOnclick(src,id) {
                 var hiddenInput = '<input type="hidden" name="hiddenField" value="' + src +'"/>';
+                var hiddenInput2 = '<input type="hidden" name="Fb_image_id" value="' + id +'"/>';
                 document.getElementById('imageform').innerHTML += hiddenInput;
+                document.getElementById('imageform').innerHTML += hiddenInput2;
                 document.getElementById('imageform').submit();
             }
         </script>
@@ -119,15 +121,11 @@
 
         window.fbAsyncInit = function() {
             FB.init({
-                appId      : '2243976699080326',
+                appId      : '2843455895902898',
                 xfbml      : true,
-                version    : 'v8.0'
+                version    : 'v9.0'
             });
-
-            FB.getLoginStatus(function(response) {
-                statusChangeCallback(response);
-            });
-
+            FB.AppEvents.logPageView();
         };
 
         (function(d, s, id){
@@ -175,10 +173,9 @@
                     console.log(response);
                     var imgHtml = "";
                     response.data.forEach(album => {album.photos.data.forEach(photo => {
-                        console.log(photo.id);
-                        console.log(photo.images[photo.images.length - 1].source);
-                        imgHtml += ' <img name="upload" value="' + photo.id + '" src="' + photo.images[photo.images.length - 1].source + '" onclick=imgOnclick("' + photo.images[photo.images.length - 1].source + '") /> ';
-                    })})
+
+                    imgHtml = imgHtml  +' <img name="upload" value="' + photo.id + '" src="' + photo.images[photo.images.length - 1].source + '" onclick=imgOnclick("' + photo.images[photo.images.length - 1].source + '","' + photo.id + '") /> ';
+                })})
                     document.getElementById('imageDiv').innerHTML =  imgHtml;
                     console.log()
                 }

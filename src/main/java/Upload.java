@@ -40,9 +40,7 @@ public class Upload extends HttpServlet {
         if (blobKeys == null || blobKeys.isEmpty()) {
             res.sendRedirect("/");
         } else {
-            
-        	//res.sendRedirect("/serve?blob-key=" + blobKeys.get(0).getKeyString());
-        		
+        	
         	byte[] blobBytes = getBlobBytes(blobKeys.get(0));
     		List<EntityAnnotation> imageLabels = getImageLabels(blobBytes);
     		

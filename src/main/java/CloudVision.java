@@ -1,3 +1,4 @@
+import com.google.appengine.api.datastore.*;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
@@ -5,124 +6,134 @@ import com.google.cloud.vision.v1.EntityAnnotation;
 import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
-import com.google.cloud.vision.v1.Feature.Type;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors.FieldDescriptor;
-
+import org.apache.commons.io.IOUtils;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-//import org.apache.commons.io.FileUtils;
 
 @MultipartConfig
 @WebServlet(
         name = "CloudVision",
         urlPatterns = {"/CloudVision"}
 )
-public class CloudVision extends HttpServlet{
+public class CloudVision extends HttpServlet {
     public CloudVision() {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println(request.getParameter("hiddenField"));
         String url = request.getParameter("hiddenField");
         String user = request.getParameter("username");
-        System.out.println(user);
-        List<AnnotateImageResponse> labelResponses = this.generateLabel(url);
-        StringBuffer sb = new StringBuffer("");
-        PhotoDetails photo = new PhotoDetails();
-        photo.setUrl(url);
-        photo.setName(user);
-        List<PicInfo> picInfos = new ArrayList();
-        Iterator var13 = labelResponses.iterator();
-
-        while(var13.hasNext()) {
-            AnnotateImageResponse res = (AnnotateImageResponse)var13.next();
-            if (res.hasError()) {
-                response.getWriter().println("Error: %s%n" + res.getError().getMessage());
-            }
-
-            Iterator var15 = res.getLabelAnnotationsList().iterator();
-
-            while(var15.hasNext()) {
-                EntityAnnotation annotation = (EntityAnnotation)var15.next();
-                Map<FieldDescriptor, Object> fields = annotation.getAllFields();
-                PicInfo pic = new PicInfo();
-                Iterator var19 = fields.keySet().iterator();
-
-                while(var19.hasNext()) {
-                    FieldDescriptor fd = (FieldDescriptor)var19.next();
-                    if (!fd.getName().contains("mid") && !fd.getName().contains("topicality")) {
-                        sb.append(fd.getJsonName() + ":" + fields.get(fd).toString());
-                        if (fd.getJsonName().equals("description")) {
-                            pic.setDescription(fields.get(fd).toString());
-                        }
-
-                        if (fd.getJsonName().equals("score")) {
-                            pic.setScore(fields.get(fd).toString());
-                        }
-                    }
+        String FbPhotoId = request.getParameter("Fb_image_id");
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        if (checkIfImageExists(datastore, FbPhotoId) == false) {
+            List<EntityAnnotation> imageLabels = getImageLabels(url);
+            if (imageLabels != null) {
+                List<String> lables = imageLabels.stream().filter(label -> label.getScore() * 100 > 75)
+                        .map(EntityAnnotation::getDescription).collect(Collectors.toList());
+                if (null != lables && !lables.isEmpty()) {
+                    PhotoDetails photo = new PhotoDetails();
+                    photo.setUrl(url);
+                    photo.setName(user);
+                    addImageDetailsToDataStore(photo, lables, FbPhotoId, datastore);
+                    getImageFromStore(request, response, datastore, FbPhotoId);
                 }
-
-                picInfos.add(pic);
-                sb.append("<br>");
             }
-
-            photo.setInformation(picInfos);
-            response.setContentType("text/html");
-            PrintWriter out = response.getWriter();
-            byte[] base64 = getImageUrlInBytes(url);
-            String imgEncode = Base64.getEncoder().encodeToString(base64);
-            out.println("<h1 style='text-align:center;'> HashTag generator for " + user + "'s photo </h1>");
-            out.println("<p style='text-align:center;'><img src='data:image/jpg;base64, " + imgEncode + "' alt='pic img' style='width:304px;height:228px;'></p>");
-            out.println("<p> " + photo.toString() + "</p>");
+        }else{
+            getImageFromStore(request, response, datastore, FbPhotoId);
         }
     }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws
+            ServletException, IOException {
+    }
+    public void addImageDetailsToDataStore(PhotoDetails photo, List<String> labels, String FbPhotoId, DatastoreService
+            datastore) {
+        Entity Temp = new Entity("Temp");
+        Temp.setProperty("fb_image_id", FbPhotoId);
+        Temp.setProperty("user_name", photo.getName());
+        Temp.setProperty("image_url", photo.getUrl());
+        Temp.setProperty("labels", labels);
+        datastore.put(Temp);
+    }
+    private void getImageFromStore(HttpServletRequest request, HttpServletResponse response,DatastoreService datastore, String FbPhotoId ) {
 
-    private byte[] getImageUrlInBytes(String urlToBytes) throws IOException {
-        URL url = new URL(urlToBytes);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-        try (InputStream inputStream = url.openStream()) {
-            int n = 0;
-            byte [] buffer = new byte[ 1024 ];
-            while (-1 != (n = inputStream.read(buffer))) {
-                output.write(buffer, 0, n);
-            }
+        Query query =
+                new Query("Temp")
+                        .setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, FbPhotoId));
+        PreparedQuery pq = datastore.prepare(query);
+        List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
+        if(null != results) {
+            results.forEach(user -> {
+                List<String> labelsFromStore = (List<String>) user.getProperty("labels");
+                System.out.println("labelsFromStore"+labelsFromStore);
+                String image_url=user.getProperty("image_url").toString();
+                request.setAttribute("imageUrl",image_url );
+                request.setAttribute("imageLabels", labelsFromStore);
+                RequestDispatcher dispatcher = getServletContext()
+                        .getRequestDispatcher("/labels.jsp");
+                try {
+                    dispatcher.forward(request, response);
+                } catch (ServletException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
-        return output.toByteArray();
+
     }
 
-    private List<AnnotateImageResponse> generateLabel(String filePath) throws IOException {
-        List<AnnotateImageRequest> requests = new ArrayList();
-        System.out.println(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
-        ByteString imgBytes = ByteString.readFrom(new URL(filePath).openStream());
-        Image img = Image.newBuilder().setContent(imgBytes).build();
-        Feature feat = Feature.newBuilder().setType(Type.LABEL_DETECTION).build();
-        AnnotateImageRequest request = AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-        requests.add(request);
+    private boolean checkIfImageExists(DatastoreService datastore, String fbPhotoId) {
+        Query q =
+                new Query("Temp")
+                        .setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, fbPhotoId));
+        PreparedQuery pq = datastore.prepare(q);
+        Entity result = pq.asSingleEntity();
+        if (result == null) {
+            return false;
+        }
+        return true;
+    }
 
+    public static byte[] downloadFile(URL url) throws Exception {
+        try (InputStream in = url.openStream()) {
+            byte[] bytes = IOUtils.toByteArray(in);
+            return bytes;
+        }
+    }
+    private List<EntityAnnotation> getImageLabels(String imageUrl) {
         try {
+            byte[] imgBytes = downloadFile(new URL(imageUrl));
+            ByteString byteString = ByteString.copyFrom(imgBytes);
+            Image image = Image.newBuilder().setContent(byteString).build();
+            Feature feature = Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build();
+            AnnotateImageRequest request =
+                    AnnotateImageRequest.newBuilder().addFeatures(feature).setImage(image).build();
+            List<AnnotateImageRequest> requests = new ArrayList<>();
+            requests.add(request);
             ImageAnnotatorClient client = ImageAnnotatorClient.create();
-            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
-            List<AnnotateImageResponse> responses = response.getResponsesList();
-            return responses;
-        } catch (Exception var10) {
-            System.out.println(var10);
-            return null;
+            BatchAnnotateImagesResponse batchResponse = client.batchAnnotateImages(requests);
+            client.close();
+            List<AnnotateImageResponse> imageResponses = batchResponse.getResponsesList();
+            AnnotateImageResponse imageResponse = imageResponses.get(0);
+            if (imageResponse.hasError()) {
+                System.err.println("Error getting image labels: " + imageResponse.getError().getMessage());
+                return null;
+            }
+            return imageResponse.getLabelAnnotationsList();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    }
 }
+
