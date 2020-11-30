@@ -56,24 +56,28 @@ public class CloudVision extends HttpServlet {
     }
     public static void addImageDetailsToDataStore(PhotoDetails photo, List<String> labels, String FbPhotoId, DatastoreService
             datastore) {
-        Entity User_Photos = new Entity("User_Photos");
-        User_Photos.setProperty("fb_image_id", FbPhotoId);
-        User_Photos.setProperty("image_url", photo.getUrl());
-        User_Photos.setProperty("labels", labels);
-        datastore.put(User_Photos);
+        Entity User_Photo = new Entity("User_Photo");
+        User_Photo.setProperty("fb_image_id", FbPhotoId);
+        User_Photo.setProperty("image_url", photo.getUrl());
+        String result = labels.stream()
+                .map(n -> String.valueOf(n))
+                .collect(Collectors.joining("#", "{", "}"));
+
+        User_Photo.setProperty("labels", result);
+        datastore.put(User_Photo);
     }
-    public void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String FbPhotoId) {
+    private void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String FbPhotoId) {
 
         Query query =
-                new Query("User_Photos")
+                new Query("User_Photo")
                         .setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, FbPhotoId));
         PreparedQuery pq = datastore.prepare(query);
         List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
         if(null != results) {
-            results.forEach(user_Photos -> {
-                List<String> labelsFromStore = (List<String>) user_Photos.getProperty("labels");
+            results.forEach(user_Photo -> {
+                String labelsFromStore = (String) user_Photo.getProperty("labels");
                 System.out.println("labelsFromStore"+labelsFromStore);
-                String image_url=user_Photos.getProperty("image_url").toString();
+                String image_url=user_Photo.getProperty("image_url").toString();
                 request.setAttribute("imageUrl",image_url );
                 request.setAttribute("imageLabels", labelsFromStore);
                 RequestDispatcher dispatcher = getServletContext()
@@ -92,7 +96,7 @@ public class CloudVision extends HttpServlet {
 
     public static boolean checkIfImageExists(DatastoreService datastore, String fbPhotoId) {
         Query q =
-                new Query("User_Photos")
+                new Query("User_Photo")
                         .setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, fbPhotoId));
         PreparedQuery pq = datastore.prepare(q);
         Entity result = pq.asSingleEntity();
@@ -102,7 +106,7 @@ public class CloudVision extends HttpServlet {
         return true;
     }
 
-    public static byte[] downloadFile(URL url) throws Exception {
+    private static byte[] downloadFile(URL url) throws Exception {
         try (InputStream in = url.openStream()) {
             byte[] bytes = IOUtils.toByteArray(in);
             return bytes;

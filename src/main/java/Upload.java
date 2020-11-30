@@ -95,15 +95,15 @@ public class Upload extends HttpServlet {
 	public void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String FbPhotoId) {
 
 		Query query =
-				new Query("User_Photos")
+				new Query("User_Photo")
 						.setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, FbPhotoId));
 		PreparedQuery pq = datastore.prepare(query);
 		List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
 		if(null != results) {
-			results.forEach(user -> {
-				List<String> labelsFromStore = (List<String>) user.getProperty("labels");
+			results.forEach(user_Photo -> {
+				String labelsFromStore = (String) user_Photo.getProperty("labels");
 				System.out.println("labelsFromStore"+labelsFromStore);
-				String image_url=user.getProperty("image_url").toString();
+				String image_url=user_Photo.getProperty("image_url").toString();
 				request.setAttribute("imageUrl",image_url );
 				request.setAttribute("imageLabels", labelsFromStore);
 				RequestDispatcher dispatcher = getServletContext()
