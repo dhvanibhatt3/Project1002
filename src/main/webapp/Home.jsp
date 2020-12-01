@@ -423,6 +423,18 @@
             );
 
         }
+        function getFileNameWithExt(event) {
+
+            if (!event || !event.target || !event.target.files || event.target.files.length === 0) {
+                return;
+            }
+
+            var name = event.target.files[0].name;
+            document.getElementById("fileName").value = name;
+
+
+        }
+
 
     </script>
 
@@ -448,7 +460,8 @@
             <section class="active">
 
                 <form action="<%= blobstoreService.createUploadUrl("/upload") %>" method="post" enctype="multipart/form-data">
-                    <input type="file"  name="myFile"   multiple=""/>
+                    <input type="file"  name="myFile" onChange='getFileNameWithExt(event)'  multiple=""/>
+                    <input type="hidden" id="fileName" name="fileName" />
                     <input type="submit" class="btn btn-info" value="Generate">
                 </form>
 

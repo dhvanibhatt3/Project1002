@@ -35,13 +35,9 @@ public class Upload extends HttpServlet {
 
 	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse res)
-			throws ServletException, IOException {
-		String fileName=null;
-		try {
-			 fileName=getFileName(req);
-		} catch (FileUploadException e) {
-			e.printStackTrace();
-		}
+			throws  IOException {
+		String fileName=req.getParameter("fileName");
+
 		Map<String, List<BlobKey>> blobs = blobstoreService.getUploads(req);
 		List<BlobKey> blobKeys = blobs.get("myFile");
 
@@ -56,22 +52,6 @@ public class Upload extends HttpServlet {
 		}
 	}
 
-	public String getFileName(HttpServletRequest request) throws IOException, ServletException, FileUploadException {
-		String fileName=null;
-		FileItemFactory factory = new DiskFileItemFactory();
-		ServletFileUpload upload = new ServletFileUpload(factory);
-		List items = upload.parseRequest(request);
-		Iterator iter = items.iterator();
-		while (iter.hasNext()) {
-			FileItem item = (FileItem) iter.next();
-			if (!item.isFormField()) {
-				 fileName = item.getName();
-				System.out.println("fileName" + fileName);
-			}
-		}
-		return fileName;
-
-	}
     private void processimage(HttpServletRequest request, HttpServletResponse response,String FbPhotoId,String imageUrl,List<EntityAnnotation> imageLabels){
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		if (CloudVision.checkIfImageExists(datastore, FbPhotoId) == false) {
