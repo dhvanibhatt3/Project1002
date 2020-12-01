@@ -123,11 +123,9 @@
 				<table class="hash-table">
 					<tbody>
 					<tr>
-<%--						<c:forEach items="${imageLabels}" var="label">--%>
 
 							<td><p><strong>${imageLabels}</strong></p></td>
 
-<%--						</c:forEach>--%>
 
 					</tr>
 					</tbody>
@@ -140,11 +138,8 @@
 	</div>
 
 	<div id="shareBtn" class="btn btn-success clearfix">Share Image on Facebook</div>
-</br>
-</br>
 	<div id="alert" style="display:none" class ="alert alert-success"> <strong > Success!</strong> Posted Image with HashTag on Facebook.
 	</div>
-</br>
 	<a href="/">Reset Image</a>
 </div><br>
 

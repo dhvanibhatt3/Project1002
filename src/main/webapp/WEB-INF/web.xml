@@ -6,20 +6,4 @@
   <welcome-file-list>
     <welcome-file>Home.jsp</welcome-file>
   </welcome-file-list>
-  <!-- <servlet>
-    <servlet-name>Uploader</servlet-name>
-    <servlet-class>com.google.cloud.Uploader</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>Serve</servlet-name>
-    <servlet-class>Serve</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Uploader</servlet-name>
-    <url-pattern>/Uploader</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>Serve</servlet-name>
-    <url-pattern>/serve</url-pattern>
-  </servlet-mapping> -->
 </web-app>

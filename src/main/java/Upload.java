@@ -7,12 +7,6 @@ import com.google.appengine.api.images.ImagesServiceFactory;
 import com.google.appengine.api.images.ServingUrlOptions;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -23,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,38 +45,36 @@ public class Upload extends HttpServlet {
 		}
 	}
 
-    private void processimage(HttpServletRequest request, HttpServletResponse response,String FbPhotoId,String imageUrl,List<EntityAnnotation> imageLabels){
+    private void processimage(HttpServletRequest request, HttpServletResponse response,String imageId,String imageUrl,List<EntityAnnotation> imageLabels){
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		if (CloudVision.checkIfImageExists(datastore, FbPhotoId) == false) {
+		if (CloudVision.checkIfImageExists(datastore, imageId) == false) {
 			if (imageLabels != null) {
 				List<String> labels = imageLabels.stream().filter(label -> label.getScore() * 100 > 75)
 						.map(EntityAnnotation::getDescription).collect(Collectors.toList());
 				if (null != labels && !labels.isEmpty()) {
-					PhotoDetails photo = new PhotoDetails();
-					photo.setUrl(imageUrl);
-					CloudVision.addImageDetailsToDataStore(photo, labels, FbPhotoId, datastore);
-					getImageFromStore(request, response, datastore, FbPhotoId);
+					CloudVision.addImageDetailsToDataStore(imageUrl, labels, imageId, datastore);
+					getImageFromStore(request, response, datastore, imageId);
 				}
 			}
 		}else{
-			getImageFromStore(request, response, datastore, FbPhotoId);
+			getImageFromStore(request, response, datastore, imageId);
 		}
 
 
 
 	}
-	public void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String FbPhotoId) {
+	public void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String PhotoId) {
 
 		Query query =
-				new Query("User_Photo")
-						.setFilter(new Query.FilterPredicate("fb_image_id", Query.FilterOperator.EQUAL, FbPhotoId));
+				new Query("User_Images")
+						.setFilter(new Query.FilterPredicate("image_id", Query.FilterOperator.EQUAL, PhotoId));
 		PreparedQuery pq = datastore.prepare(query);
 		List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
 		if(null != results) {
-			results.forEach(user_Photo -> {
-				String labelsFromStore = (String) user_Photo.getProperty("labels");
+			results.forEach(user_images -> {
+				String labelsFromStore = (String) user_images.getProperty("labels");
 				System.out.println("labelsFromStore"+labelsFromStore);
-				String image_url=user_Photo.getProperty("image_url").toString();
+				String image_url=user_images.getProperty("image_url").toString();
 				request.setAttribute("imageUrl",image_url );
 				request.setAttribute("imageLabels", labelsFromStore);
 				RequestDispatcher dispatcher = getServletContext()
