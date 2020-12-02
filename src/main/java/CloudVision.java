@@ -51,18 +51,20 @@ public class CloudVision extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws
             ServletException, IOException {
     }
+
     public static void addImageDetailsToDataStore(String url, List<String> labels, String imageId, DatastoreService
             datastore) {
         Entity User_Images = new Entity("User_Images");
         User_Images.setProperty("image_id", imageId);
         User_Images.setProperty("image_url", url);
-        String result = labels.stream()
-                .map(n -> String.valueOf(n))
-                .collect(Collectors.joining("#", "{", "}"));
-
-        User_Images.setProperty("labels", result);
+        StringBuffer result = new StringBuffer();
+        for(String label: labels) {
+            result.append("#").append(label).append(" ");
+        }
+        User_Images.setProperty("labels", result.toString());
         datastore.put(User_Images);
     }
+
     private void getImageFromStore(HttpServletRequest request, HttpServletResponse response, DatastoreService datastore, String imageId) {
 
         Query query =
