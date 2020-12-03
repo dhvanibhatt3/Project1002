@@ -3,6 +3,15 @@
 
 <html>
 <head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-5HNZSEY6VK"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'G-5HNZSEY6VK');
+	</script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -98,7 +107,7 @@
 <script>
 	window.fbAsyncInit = function() {
 		FB.init({
-			appId      : '2843455895902898',
+			appId      : '2243976699080326',
 			xfbml      : true,
 			version    : 'v9.0'
 		});
